@@ -12,7 +12,7 @@ def remove_long_columns(obj, exclude_keys=("SignalFrequencies", "SignalPsdValues
         return obj
 
 def extract_sessions_from_json():
-    """Allows user to upload a JSON file, extracts relevant session data, displays it, and provides a downloadable file."""
+    """Allows user to upload a JSON file, extracts relevant session data, displays it, and provides a printable view."""
     st.title("Extract Sessions from JSON")
     uploaded_file = st.file_uploader("Upload a JSON file", type=["json"])
     
@@ -27,12 +27,19 @@ def extract_sessions_from_json():
         
         # Convert to JSON string
         cleaned_json_str = json.dumps(sessions_cleaned, indent=4)
+        cleaned_txt_str = '\n'.join([json.dumps(session, indent=4) for session in sessions_cleaned])
         
         # Display cleaned JSON in the debugging view
         st.subheader("Extracted Sessions Data")
         st.text_area("Cleaned JSON Data", cleaned_json_str, height=300)
         
-        # Provide download link
+        # Add a Print Button
+        st.markdown(
+            """<button onclick="window.print()" style="padding:10px 20px; font-size:16px;">Print Data</button>""",
+            unsafe_allow_html=True
+        )
+        
+        # Provide JSON download link
         st.download_button(
             label="Download Cleaned Sessions JSON",
             data=cleaned_json_str,
@@ -40,8 +47,17 @@ def extract_sessions_from_json():
             mime="application/json"
         )
         
+        # Provide TXT download link
+        st.download_button(
+            label="Download Cleaned Sessions TXT",
+            data=cleaned_txt_str,
+            file_name="extracted_sessions.txt",
+            mime="text/plain"
+        )
+        
         st.success("✅ Successfully processed the JSON file!")
 
 if __name__ == "__main__":
     extract_sessions_from_json()
+
 
