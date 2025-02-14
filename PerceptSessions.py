@@ -33,9 +33,22 @@ def extract_sessions_from_json():
         st.subheader("Extracted Sessions Data")
         st.text_area("Cleaned JSON Data", cleaned_json_str, height=300)
         
-        # Add a Print Button
+        # Add a Print Button using JavaScript
         st.markdown(
-            """<button onclick="window.print()" style="padding:10px 20px; font-size:16px;">Print Data</button>""",
+            """
+            <script>
+            function printData() {
+                var divToPrint = document.querySelector('textarea');
+                var newWin = window.open('', 'Print-Window');
+                newWin.document.open();
+                newWin.document.write('<html><body><pre>' + divToPrint.value + '</pre></body></html>');
+                newWin.document.close();
+                newWin.print();
+                newWin.close();
+            }
+            </script>
+            <button onclick="printData()" style="padding:10px 20px; font-size:16px;">Print Data</button>
+            """,
             unsafe_allow_html=True
         )
         
@@ -59,5 +72,3 @@ def extract_sessions_from_json():
 
 if __name__ == "__main__":
     extract_sessions_from_json()
-
-
