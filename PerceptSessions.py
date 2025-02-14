@@ -12,7 +12,7 @@ def remove_long_columns(obj, exclude_keys=("SignalFrequencies", "SignalPsdValues
         return obj
 
 def extract_sessions_from_json():
-    """Allows user to upload a JSON file, extracts relevant session data, and provides a downloadable file."""
+    """Allows user to upload a JSON file, extracts relevant session data, displays it, and provides a downloadable file."""
     st.title("Extract Sessions from JSON")
     uploaded_file = st.file_uploader("Upload a JSON file", type=["json"])
     
@@ -28,6 +28,10 @@ def extract_sessions_from_json():
         # Convert to JSON string
         cleaned_json_str = json.dumps(sessions_cleaned, indent=4)
         
+        # Display cleaned JSON in the debugging view
+        st.subheader("Extracted Sessions Data")
+        st.text_area("Cleaned JSON Data", cleaned_json_str, height=300)
+        
         # Provide download link
         st.download_button(
             label="Download Cleaned Sessions JSON",
@@ -40,3 +44,4 @@ def extract_sessions_from_json():
 
 if __name__ == "__main__":
     extract_sessions_from_json()
+
