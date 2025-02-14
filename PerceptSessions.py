@@ -12,7 +12,7 @@ def remove_long_columns(obj, exclude_keys=("SignalFrequencies", "SignalPsdValues
         return obj
 
 def extract_sessions_from_json():
-    """Allows user to upload a JSON file, extracts relevant session data, displays it, and provides a printable view."""
+    """Allows user to upload a JSON file, extracts relevant session data, and provides a downloadable file."""
     st.title("Extract Sessions from JSON")
     uploaded_file = st.file_uploader("Upload a JSON file", type=["json"])
     
@@ -32,25 +32,6 @@ def extract_sessions_from_json():
         # Display cleaned JSON in the debugging view
         st.subheader("Extracted Sessions Data")
         st.text_area("Cleaned JSON Data", cleaned_json_str, height=300)
-        
-        # Add a Print Button using JavaScript
-        st.markdown(
-            """
-            <script>
-            function printData() {
-                var divToPrint = document.querySelector('textarea');
-                var newWin = window.open('', 'Print-Window');
-                newWin.document.open();
-                newWin.document.write('<html><body><pre>' + divToPrint.value + '</pre></body></html>');
-                newWin.document.close();
-                newWin.print();
-                newWin.close();
-            }
-            </script>
-            <button onclick="printData()" style="padding:10px 20px; font-size:16px;">Print Data</button>
-            """,
-            unsafe_allow_html=True
-        )
         
         # Provide JSON download link
         st.download_button(
