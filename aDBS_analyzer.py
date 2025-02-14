@@ -2,40 +2,28 @@ import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import tkinter as tk
-from tkinter import filedialog
+import streamlit as st
 from datetime import datetime, timedelta
 
-
 def load_json_file():
-    """Prompt user to select a JSON file and load it."""
-    root = tk.Tk()
-    root.withdraw()
-    file_path = filedialog.askopenfilename(title="Select JSON file", filetypes=[("JSON files", "*.json")])
-    if not file_path:
-        print("No file selected. Exiting script.")
-        exit()
-
-    with open(file_path, "r") as file:
-        data = json.load(file)
-
-    print(f"✅ Successfully loaded: {file_path}")
-    return data
-
+    """Upload a JSON file via Streamlit UI."""
+    uploaded_file = st.file_uploader("Upload JSON File", type=["json"])
+    if uploaded_file is not None:
+        data = json.load(uploaded_file)
+        st.success("✅ Successfully loaded JSON file!")
+        return data
+    else:
+        st.warning("⚠️ Please upload a JSON file.")
+        return None
 
 def get_time_filter():
-    """Prompt user for how much time back to display (weeks, days, hours)."""
-    print("\n📆 Enter the time range to plot (weeks-days-hours format). Example: 00-03-12 for 3 days 12 hours.")
-    while True:
-        time_input = input("Enter time range (WW-DD-HH): ").strip()
-        try:
-            weeks, days, hours = map(int, time_input.split("-"))
-            total_hours = (weeks * 7 * 24) + (days * 24) + hours
-            print(f"🔹 Showing last {weeks} weeks, {days} days, and {hours} hours ({total_hours} hours total).")
-            return total_hours
-        except ValueError:
-            print("⚠️ Invalid input. Please enter the time in WW-DD-HH format.")
-
+    """Allow user to select the time range in weeks, days, and hours."""
+    weeks = st.number_input("Weeks", min_value=0, max_value=10, value=0)
+    days = st.number_input("Days", min_value=0, max_value=6, value=3)
+    hours = st.number_input("Hours", min_value=0, max_value=23, value=12)
+    total_hours = (weeks * 7 * 24) + (days * 24) + hours
+    st.write(f"🔹 Showing last {weeks} weeks, {days} days, and {hours} hours ({total_hours} hours total).")
+    return total_hours
 
 def remove_outliers(df, column_name):
     """Remove outliers using the Interquartile Range Method."""
@@ -45,7 +33,6 @@ def remove_outliers(df, column_name):
     lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
     return df[(df[column_name] >= lower_bound) & (df[column_name] <= upper_bound)]
-
 
 def extract_lfp_amplitude_data(data, hemisphere, time_filter_hours):
     """Extracts and filters LFP and Amplitude data for a given hemisphere within the selected time range."""
@@ -69,7 +56,6 @@ def extract_lfp_amplitude_data(data, hemisphere, time_filter_hours):
 
     return df
 
-
 def extract_lfp_thresholds(data, hemisphere):
     """Extracts upper and lower LFP thresholds for the specified hemisphere."""
     try:
@@ -80,9 +66,7 @@ def extract_lfp_thresholds(data, hemisphere):
                         return setting.get("UpperLfpThreshold", None), setting.get("LowerLfpThreshold", None)
     except KeyError:
         pass
-
     return None, None  # Return None if not found
-
 
 def plot_lfp_amplitude(df_left, df_right, upper_threshold_left, lower_threshold_left, upper_threshold_right,
                        lower_threshold_right):
@@ -108,8 +92,7 @@ def plot_lfp_amplitude(df_left, df_right, upper_threshold_left, lower_threshold_
     if df_right is not None and not df_right.empty:
         ax2 = ax[1].twinx()
         ax[1].plot(df_right["DateTime"], df_right["LFP"], label="LFP Right", color="green")
-        ax2.plot(df_right["DateTime"], df_right["Amplitude"], label="Amplitude Right", color="black",
-                 linestyle="dashed")
+        ax2.plot(df_right["DateTime"], df_right["Amplitude"], label="Amplitude Right", color="black", linestyle="dashed")
         if upper_threshold_right is not None:
             ax[1].axhline(y=upper_threshold_right, color="blue", linestyle="--", label="Upper LFP Threshold Right")
         if lower_threshold_right is not None:
@@ -123,19 +106,19 @@ def plot_lfp_amplitude(df_left, df_right, upper_threshold_left, lower_threshold_
 
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.show()
-
+    st.pyplot(fig)
 
 def main():
+    st.title("LFP and Stimulation Amplitude Analyzer")
     data = load_json_file()
-    time_filter_hours = get_time_filter()  # Ask user for time filter
-    df_left = extract_lfp_amplitude_data(data, "Left", time_filter_hours)
-    df_right = extract_lfp_amplitude_data(data, "Right", time_filter_hours)
-    upper_threshold_left, lower_threshold_left = extract_lfp_thresholds(data, "Left")
-    upper_threshold_right, lower_threshold_right = extract_lfp_thresholds(data, "Right")
-    plot_lfp_amplitude(df_left, df_right, upper_threshold_left, lower_threshold_left, upper_threshold_right,
-                       lower_threshold_right)
-
+    if data is not None:
+        time_filter_hours = get_time_filter()
+        df_left = extract_lfp_amplitude_data(data, "Left", time_filter_hours)
+        df_right = extract_lfp_amplitude_data(data, "Right", time_filter_hours)
+        upper_threshold_left, lower_threshold_left = extract_lfp_thresholds(data, "Left")
+        upper_threshold_right, lower_threshold_right = extract_lfp_thresholds(data, "Right")
+        plot_lfp_amplitude(df_left, df_right, upper_threshold_left, lower_threshold_left, upper_threshold_right,
+                           lower_threshold_right)
 
 if __name__ == "__main__":
     main()
